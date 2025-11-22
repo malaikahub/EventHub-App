@@ -1,62 +1,65 @@
-// src/screens/auth/Register.jsx
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import "./Register.css";
-import { registerUser } from "../../Firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { registerUser } from "../../firebase/auth";
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
   const [error, setError] = useState("");
-
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // ✅ Redirect if already logged in
+  useEffect(() => {
+    const role = localStorage.getItem("userRole");
+    if (role === "student") navigate("/events", { replace: true });
+    else if (role === "manager") navigate("/create-event", { replace: true });
+  }, [navigate]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!role) {
-      setError("Please select a role.");
+    if (email === "ali@gmail.com") {
+      setError("Manager registration is restricted.");
       return;
     }
 
-    const result = await registerUser(name, email, password, role);
+    if (!email.endsWith("@cs.fjwu.edu.pk")) {
+      setError("Please use your FJWU CS student email.");
+      return;
+    }
 
-    if (result.success) {
-      alert("Registration Successful!");
-      navigate("/login");
-    } else {
-      const err = result.error;
+    setLoading(true);
+    try {
+      const result = await registerUser(name, email, password);
+      setLoading(false);
 
-      if (err.includes("auth/email-already-in-use")) {
-        setError("This email is already registered.");
-      } else if (err.includes("auth/weak-password")) {
-        setError("Password must be at least 6 characters.");
-      } else if (err.includes("auth/invalid-email")) {
-        setError("Please enter a valid email address.");
+      if (result.success) {
+        alert("Registration Successful!");
+        localStorage.setItem("userRole", "student");
+        navigate("/events", { replace: true });
       } else {
-        setError(err);
+        setError(result.error);
       }
+    } catch (err) {
+      setLoading(false);
+      setError("Something went wrong. Try again.");
     }
   };
 
   return (
     <div className="login-container">
       <div className="register-card">
-
-        {/* Left Section */}
         <div className="register-image">
           <h2>Join EventHub</h2>
-          <p>Create your account to start creating & managing events</p>
+          <p>Create your account to explore & manage events</p>
         </div>
 
-        {/* Right Section */}
         <div className="register-form">
           <h2 className="form-title">Register</h2>
-
           {error && <p className="error-message">{error}</p>}
 
           <form onSubmit={handleRegister}>
@@ -67,15 +70,13 @@ const Register = () => {
               onChange={(e) => setName(e.target.value)}
               required
             />
-
             <input
               type="email"
-              placeholder="Email Address"
+              placeholder="University Email (cs.fjwu.edu.pk)"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-
             <input
               type="password"
               placeholder="Password (min. 6 characters)"
@@ -83,28 +84,15 @@ const Register = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              required
-            >
-              <option value="">Select Role</option>
-              <option value="student">Student - CR</option>
-              <option value="faculty">Faculty</option>
-              <option value="admin">Admin</option>
-            </select>
-
-            <button type="submit" className="btn-register">
-              Register Now
+            <button type="submit" disabled={loading}>
+              {loading ? "Registering..." : "Register Now"}
             </button>
           </form>
 
           <p className="login-link">
-            Already have an account? <a href="/login">Login here</a>
+            Already have an account? <Link to="/login">Login here</Link>
           </p>
         </div>
-
       </div>
     </div>
   );

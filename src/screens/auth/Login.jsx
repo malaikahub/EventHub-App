@@ -1,40 +1,45 @@
-// src/screens/auth/Login.jsx
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import "./Login.css";
-import { loginUser } from "../../Firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { loginUser } from "../../firebase/auth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // ✅ Redirect if already logged in
+  useEffect(() => {
+    const role = localStorage.getItem("userRole");
+    if (role === "student") navigate("/events", { replace: true });
+    else if (role === "manager") navigate("/create-event", { replace: true });
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    const result = await loginUser(email, password);
+    try {
+      const result = await loginUser(email, password);
+      setLoading(false);
 
-    if (result.success) {
-      alert("Login Successful!");
-      navigate("/my-events");                    // 🔥 fixed navigation path
-    } else {
-      const err = result.error;
+      if (result.success) {
+        const role = result.data.role;
+        localStorage.setItem("userRole", role);
 
-      if (err.includes("auth/invalid-credential")) {
-        setError("Incorrect email or password.");
-      } else if (err.includes("auth/user-not-found")) {
-        setError("No account found with this email.");
-      } else if (err.includes("auth/wrong-password")) {
-        setError("Incorrect password.");
-      } else if (err.includes("auth/invalid-email")) {
-        setError("Invalid email format.");
+        if (role === "student") navigate("/events", { replace: true });
+        else if (role === "manager") navigate("/create-event", { replace: true });
+        else setError("Invalid role. Contact admin.");
       } else {
-        setError(err);
+        setError(result.error);
       }
+    } catch (err) {
+      setLoading(false);
+      setError("Something went wrong. Try again.");
+      console.error(err);
     }
   };
 
@@ -42,15 +47,13 @@ const Login = () => {
     <div className="login-page">
       <div className="login-container">
         <div className="login-card">
-
           <div className="login-image">
             <h2>Welcome Back</h2>
-            <p>Login to manage and create events</p>
+            <p>Login to access your event panel</p>
           </div>
 
           <div className="login-form">
             <h2 className="form-title">Login</h2>
-
             {error && <p className="error-message">{error}</p>}
 
             <form onSubmit={handleLogin}>
@@ -61,7 +64,6 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-
               <input
                 type="password"
                 placeholder="Password"
@@ -69,18 +71,15 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-
-              <button type="submit" className="btn-login">
-                Login
+              <button type="submit" disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
               </button>
             </form>
 
             <p className="register-link">
-              Don't have an account? <a href="/register">Register here</a>
+              Don't have an account? <Link to="/register">Register here</Link>
             </p>
-
           </div>
-
         </div>
       </div>
     </div>

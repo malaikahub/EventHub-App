@@ -1,42 +1,58 @@
 // src/firebase/auth.js
-
 import { auth, db } from "./firebaseConfig";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 /* -------------------------------------------------------
    REGISTER USER (Auth + Firestore Profile)
+   Only @cs.fjwu.edu.pk emails allowed for students
+   Manager only: ali@gmail.com
 ------------------------------------------------------- */
-export const registerUser = async (name, email, password, role) => {
+export const registerUser = async (name, email, password) => {
   try {
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password) {
       return { success: false, error: "All fields are required." };
     }
 
-    // Create user
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+    let role = "student"; // default role
 
+    // Manager check
+    if (email === "ali@gmail.com") {
+      return { success: false, error: "Manager registration is restricted." };
+    }
+
+    // Email domain restriction for students
+    const allowedDomain = "@cs.fjwu.edu.pk";
+    if (!email.endsWith(allowedDomain)) {
+      return {
+        success: false,
+        error: `Only FJWU CS students can register. Use your ${allowedDomain} email.`,
+      };
+    }
+
+    // Create user in Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Save profile to Firestore
-    await setDoc(doc(db, "users", user.uid), {
+    // Create profile document in Firestore
+    const profile = {
       uid: user.uid,
       name,
       email,
       role,
       createdAt: new Date(),
-    });
+    };
 
-    return { success: true, user };
+    await setDoc(doc(db, "users", user.uid), profile);
+
+    // Save role locally
+    localStorage.setItem("userRole", role);
+
+    return { success: true, user, data: profile };
   } catch (error) {
     return { success: false, error: mapAuthError(error) };
   }
@@ -44,6 +60,7 @@ export const registerUser = async (name, email, password, role) => {
 
 /* -------------------------------------------------------
    LOGIN USER
+   Assign role automatically (manager or student)
 ------------------------------------------------------- */
 export const loginUser = async (email, password) => {
   try {
@@ -51,16 +68,11 @@ export const loginUser = async (email, password) => {
       return { success: false, error: "Email and password are required." };
     }
 
-    // Login user
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-
+    // Firebase Auth login
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Fetch user profile from Firestore
+    // Get profile from Firestore
     const profileRef = doc(db, "users", user.uid);
     const profileSnapshot = await getDoc(profileRef);
 
@@ -68,11 +80,17 @@ export const loginUser = async (email, password) => {
       return { success: false, error: "User profile not found." };
     }
 
-    return {
-      success: true,
-      user,
-      data: profileSnapshot.data(),
-    };
+    let profileData = profileSnapshot.data();
+
+    // Force manager role for ali@gmail.com
+    if (user.email === "ali@gmail.com") {
+      profileData.role = "manager";
+    }
+
+    // Save role locally for routing
+    localStorage.setItem("userRole", profileData.role);
+
+    return { success: true, user, data: profileData };
   } catch (error) {
     return { success: false, error: mapAuthError(error) };
   }
@@ -84,6 +102,7 @@ export const loginUser = async (email, password) => {
 export const logoutUser = async () => {
   try {
     await signOut(auth);
+    localStorage.removeItem("userRole"); // remove saved role
     return { success: true };
   } catch (error) {
     return { success: false, error: mapAuthError(error) };
@@ -94,9 +113,7 @@ export const logoutUser = async () => {
    FRIENDLY FIREBASE ERROR MESSAGES
 ------------------------------------------------------- */
 const mapAuthError = (error) => {
-  const code = error.code;
-
-  switch (code) {
+  switch (error.code) {
     case "auth/email-already-in-use":
       return "This email is already registered.";
     case "auth/invalid-email":

@@ -1,46 +1,159 @@
+// src/App.jsx
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 
-import Login from "./screens/auth/Login.jsx";
-import Register from "./screens/auth/Register.jsx";
+// AUTH SCREENS
+import Login from "./screens/auth/Login";
+import Register from "./screens/auth/Register";
 
-import AllEvents from "./screens/pages/AllEvents.jsx";
-import Analytics from "./screens/pages/Analytics.jsx";
-import CreateEvent from "./screens/pages/CreateEvent.jsx";
-import EventDescription from "./screens/pages/EventDescription.jsx";
-import MyEvents from "./screens/pages/MyEvents.jsx";
-import MyRegistrations from "./screens/pages/MyRegistrations.jsx";
-import Profile from "./screens/pages/Profile.jsx";
-import Search from "./screens/pages/Search.jsx";
-import Settings from "./screens/pages/Settings.jsx";
+// STUDENT SCREENS
+import MyRegistrations from "./screens/student/MyRegistrations";
+import MyEvents from "./screens/student/MyEvents";
+import Profile from "./screens/student/Profile";
+import Settings from "./screens/student/Settings";
+
+// MANAGER SCREENS
+import CreateEvent from "./screens/manager/CreateEvent";
+import Analytics from "./screens/manager/Analytics";
+
+// COMMON SCREENS
+import AllEvents from "./screens/common/AllEvents";
+import EventDescription from "./screens/common/EventDescription";
+import Search from "./screens/common/Search";
+
+// FIREBASE
+import { auth, db } from "./firebase/firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 function App() {
   const location = useLocation();
+  const hideNavbar = ["/login", "/register"].includes(location.pathname);
 
-  // Hide navbar on login & register pages
-  const hideNavbar =
-    location.pathname === "/login" || location.pathname === "/register";
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ----------------------------------------
+  // AUTH LISTENER — RUNS ONCE
+  // ----------------------------------------
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+
+        // Fetch role
+        const docRef = doc(db, "users", currentUser.uid);
+        const docSnap = await getDoc(docRef);
+
+        let fetchedRole = docSnap.exists() ? docSnap.data().role : null;
+
+        // FORCE MANAGER FOR ALI
+        if (currentUser.email === "ali@gmail.com") {
+          fetchedRole = "manager";
+        }
+
+        setRole(fetchedRole);
+        localStorage.setItem("userRole", fetchedRole);
+      } else {
+        setUser(null);
+        setRole(null);
+        localStorage.removeItem("userRole");
+      }
+
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // ----------------------------------------
+  // LOADING SCREEN (PREVENT UI FLASH)
+  // ----------------------------------------
+  if (loading) {
+    return (
+      <div style={{ 
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        fontSize: "24px",
+        fontWeight: "bold"
+      }}>
+        Loading...
+      </div>
+    );
+  }
+
+  // ----------------------------------------
+  // PROTECTED ROUTE
+  // ----------------------------------------
+  const ProtectedRoute = ({ children, allowed }) => {
+    if (!user) return <Navigate to="/login" replace />;
+    if (allowed && !allowed.includes(role)) return <Navigate to="/" replace />;
+    return children;
+  };
+
+  const StudentRoute = ({ children }) => (
+    <ProtectedRoute allowed={["student"]}>{children}</ProtectedRoute>
+  );
+
+  const ManagerRoute = ({ children }) => (
+    <ProtectedRoute allowed={["manager"]}>{children}</ProtectedRoute>
+  );
+
+  const BothRoute = ({ children }) => (
+    <ProtectedRoute allowed={["student", "manager"]}>{children}</ProtectedRoute>
+  );
+
+  // ----------------------------------------
+  // AUTH ROUTE PROTECTION (LOGIN/REGISTER)
+  // ----------------------------------------
+  const AuthRedirect = ({ children }) => {
+    if (user && role === "student") return <Navigate to="/events" replace />;
+    if (user && role === "manager") return <Navigate to="/create-event" replace />;
+    return children;
+  };
+
+  // ----------------------------------------
+  // DEFAULT REDIRECT
+  // ----------------------------------------
+  const defaultRedirect = () => {
+    if (role === "manager") return "/create-event";
+    if (role === "student") return "/events";
+    return "/login";
+  };
 
   return (
     <>
       {!hideNavbar && <Navbar />}
 
       <Routes>
-        {/* DEFAULT ROUTE - ALWAYS OPEN REGISTER FIRST */}
-        <Route path="/" element={<Navigate to="/register" />} />
+        {/* DEFAULT ROUTE */}
+        <Route path="/" element={<Navigate to={defaultRedirect()} replace />} />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* AUTH ROUTES */}
+        <Route path="/login" element={<AuthRedirect><Login /></AuthRedirect>} />
+        <Route path="/register" element={<AuthRedirect><Register /></AuthRedirect>} />
 
-        <Route path="/events" element={<AllEvents />} />
-        <Route path="/create-event" element={<CreateEvent />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/event/:id" element={<EventDescription />} />
-        <Route path="/my-events" element={<MyEvents />} />
-        <Route path="/my-registrations" element={<MyRegistrations />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/settings" element={<Settings />} />
+        {/* COMMON ROUTES */}
+        <Route path="/events" element={<BothRoute><AllEvents /></BothRoute>} />
+        <Route path="/event/:id" element={<BothRoute><EventDescription /></BothRoute>} />
+        <Route path="/search" element={<BothRoute><Search /></BothRoute>} />
+
+        {/* STUDENT ROUTES */}
+        <Route path="/my-registrations" element={<StudentRoute><MyRegistrations /></StudentRoute>} />
+        <Route path="/profile" element={<StudentRoute><Profile /></StudentRoute>} />
+        <Route path="/settings" element={<StudentRoute><Settings /></StudentRoute>} />
+
+        {/* MANAGER ROUTES */}
+        <Route path="/create-event" element={<ManagerRoute><CreateEvent /></ManagerRoute>} />
+        <Route path="/analytics" element={<ManagerRoute><Analytics /></ManagerRoute>} />
+        <Route path="/my-events" element={<ManagerRoute><MyEvents /></ManagerRoute>} />
+
+        {/* FALLBACK */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );
