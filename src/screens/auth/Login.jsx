@@ -4,7 +4,7 @@ import "./Login.css";
 import { loginUser } from "../../firebase/auth";
 
 const Login = () => {
-  const [role, setRole] = useState(""); // Selected role
+  const [role, setRole] = useState(() => localStorage.getItem("loginRole") || "student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -80,7 +80,7 @@ const Login = () => {
                 id="student"
                 name="role"
                 checked={role === "student"}
-                onChange={() => setRole("student")}
+                onChange={() => { setRole("student"); localStorage.setItem("loginRole", "student"); }}
               />
               <label htmlFor="student">Student</label>
 
@@ -89,7 +89,7 @@ const Login = () => {
                 id="manager"
                 name="role"
                 checked={role === "manager"}
-                onChange={() => setRole("manager")}
+                onChange={() => { setRole("manager"); localStorage.setItem("loginRole", "manager"); }}
               />
               <label htmlFor="manager">Manager</label>
 

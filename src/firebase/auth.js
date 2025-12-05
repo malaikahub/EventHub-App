@@ -9,16 +9,37 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 
 /* -------------------------------------------------------
    REGISTER USER (Auth + Firestore Profile)
-   Student domain = @fjwu.edu.pk
-   Manager account = manager@fjwu.edu.pk (cannot register)
+   Allowed: Students only
+   Required fields: name, email, password, department,
+                    phone, dob, country, city, username
 ------------------------------------------------------- */
-export const registerUser = async (name, email, password) => {
+export const registerUser = async (
+  name,
+  email,
+  password,
+  department,
+  phone,
+  dob,
+  country,
+  city,
+  username
+) => {
   try {
-    if (!name || !email || !password) {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !department ||
+      !phone ||
+      !dob ||
+      !country ||
+      !city ||
+      !username
+    ) {
       return { success: false, error: "All fields are required." };
     }
 
-    let role = "student"; // default role
+    let role = "student"; // always student if registering
 
     // ❌ Manager cannot register
     if (email === "manager@fjwu.edu.pk") {
@@ -29,15 +50,15 @@ export const registerUser = async (name, email, password) => {
     }
 
     // ✅ Student email validation
-    const allowedDomain = "@fjwu.edu.pk";
-    if (!email.endsWith(allowedDomain)) {
+    if (!email.endsWith("fjwu.edu.pk")) {
       return {
         success: false,
-        error: `Only FJWU students can register. Use your ${allowedDomain} email.`,
+        error:
+          "Email must end with fjwu.edu.pk (e.g., username@cs.fjwu.edu.pk).",
       };
     }
 
-    // Create user in Firebase Auth
+    // Firebase authentication
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
@@ -45,18 +66,24 @@ export const registerUser = async (name, email, password) => {
     );
     const user = userCredential.user;
 
-    // Save profile in Firestore
+    // Data saved in Firestore
     const profile = {
       uid: user.uid,
       name,
       email,
+      username,
+      phone,
+      dob,
+      country,
+      city,
+      department,
       role,
       createdAt: new Date(),
     };
 
     await setDoc(doc(db, "users", user.uid), profile);
 
-    // Save role locally
+    // Store role in local storage
     localStorage.setItem("userRole", role);
 
     return { success: true, user, data: profile };
@@ -66,10 +93,9 @@ export const registerUser = async (name, email, password) => {
 };
 
 /* -------------------------------------------------------
-   LOGIN USER
-   Auto-assign role:
+   LOGIN USER — auto assign roles
+   Students: student
    manager@fjwu.edu.pk → manager
-   students → student
 ------------------------------------------------------- */
 export const loginUser = async (email, password) => {
   try {
@@ -77,7 +103,7 @@ export const loginUser = async (email, password) => {
       return { success: false, error: "Email and password are required." };
     }
 
-    // Firebase Login
+    // Firebase login
     const userCredential = await signInWithEmailAndPassword(
       auth,
       email,
@@ -85,7 +111,7 @@ export const loginUser = async (email, password) => {
     );
     const user = userCredential.user;
 
-    // Read Firestore profile
+    // Fetch profile from Firestore
     const profileRef = doc(db, "users", user.uid);
     const profileSnapshot = await getDoc(profileRef);
 
@@ -95,12 +121,11 @@ export const loginUser = async (email, password) => {
 
     let profileData = profileSnapshot.data();
 
-    // ✅ FORCE MANAGER ROLE
-    if (user.email === "manager@fjwu.edu.pk") {
+    // 🚨 Override role for manager login
+    if (email === "manager@fjwu.edu.pk") {
       profileData.role = "manager";
     }
 
-    // Save role locally
     localStorage.setItem("userRole", profileData.role);
 
     return { success: true, user, data: profileData };
@@ -130,15 +155,15 @@ const mapAuthError = (error) => {
     case "auth/email-already-in-use":
       return "This email is already registered.";
     case "auth/invalid-email":
-      return "Please enter a valid email address.";
+      return "Enter a valid email address.";
     case "auth/weak-password":
       return "Password must be at least 6 characters.";
     case "auth/user-not-found":
       return "No user found with this email.";
     case "auth/wrong-password":
-      return "Incorrect password. Try again.";
+      return "Incorrect password.";
     case "auth/too-many-requests":
-      return "Too many attempts. Please try again later.";
+      return "Too many attempts. Try again later.";
     default:
       return error.message?.replace("Firebase:", "").trim() || "Unknown error.";
   }

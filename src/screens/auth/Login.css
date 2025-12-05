@@ -13,7 +13,7 @@
 body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #f8f9fc 0%, #e3e6f0 100%);
+  background: #f2f5f7; /* consistent soft background */
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -31,12 +31,12 @@ body {
 
 /* Card */
 .login-card {
-  background: white;
-  border-radius: 20px;
-  box-shadow: var(--card-shadow);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 10px 10px 20px rgba(0,0,0,0.08), -10px -10px 20px rgba(255,255,255,0.9);
   overflow: hidden;
   display: flex;
-  min-height: 500px;
+  min-height: 520px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -156,11 +156,13 @@ body {
 .login-form input {
   padding: 0.8rem 0.75rem;
   height: calc(3rem + 2px);
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #e3e6f0;
   margin-bottom: 15px;
   transition: all 0.3s ease;
   font-size: 1rem;
+  background: #f8fafc;
+  box-shadow: inset 6px 6px 12px rgba(0,0,0,0.05), inset -6px -6px 12px rgba(255,255,255,0.9);
 }
 
 .login-form input:focus {
@@ -173,14 +175,18 @@ body {
 .btn-login {
   background: var(--primary-color);
   border: none;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 12px 18px;
+  border-radius: 12px;
   font-weight: 600;
   font-size: 1rem;
   color: #fff;
   transition: all 0.3s ease;
   cursor: pointer;
+  display: block;
+  margin: 10px auto 0 auto;
+  box-shadow: 8px 8px 16px rgba(0,0,0,0.08), -8px -8px 16px rgba(255,255,255,0.9);
 }
+
 
 .btn-login:hover {
   background: var(--secondary-color);

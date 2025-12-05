@@ -1,126 +1,60 @@
-/* ---------------------- NAVBAR FIXED TOP ---------------------- */
+/* NAVBAR WRAPPER */
 .navbar {
-  position: fixed;
-  top: 0.5cm;        /* Requested offset from top */
-  left: 0;
   width: 100%;
-  z-index: 999;
+  padding: 12px 25px;
   background: #ffffff;
-  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e6e8eb;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+
+/* LEFT SIDE (Logo + Search) */
+.nav-left {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  gap: 20px;
 }
 
-/* Prevent page content from hiding behind navbar */
-body {
-  padding-top: calc(0.5cm + 70px); /* 0.5cm spacing + navbar height */
-}
+.nav-center { flex: 1; display: flex; justify-content: center; }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.nav-icon { color: #1b5e20; font-size: 20px; cursor: pointer; }
 
-/* ---------------------- HAMBURGER BUTTON ---------------------- */
-.menu-btn {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 25px;
-  height: 18px;
-  cursor: pointer;
-  margin-right: 15px;
-}
-
-.menu-btn .bar {
-  height: 3px;
-  width: 100%;
-  background-color: #2e7d32;
-  border-radius: 2px;
-}
-
-/* ---------------------- LOGO ---------------------- */
+/* LOGO */
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo img {
-  height: 40px;
-}
-
-.logo h1 {
-  font-size: 18px;
-  color: #2e7d32;
-  font-weight: 600;
-}
-
-/* ---------------------- RIGHT NAV ---------------------- */
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.nav-icons .material-icons {
-  margin-left: 10px;
-  cursor: pointer;
-  color: #555;
-  transition: 0.3s;
-}
-
-.nav-icons .material-icons:hover {
-  color: #2e7d32;
-}
-
-/* ---------------------- SIDEBAR ---------------------- */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: -220px;
-  width: 200px;
-  height: 100%;
-  background-color: #fff;
-  padding: 20px 10px;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-  transition: left 0.3s ease;
-  z-index: 200;
-}
-
-.sidebar.active {
-  left: 0;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin-top: 20px;
-}
-
-.sidebar ul li {
-  margin-bottom: 10px;
-}
-
-.sidebar ul li a {
   text-decoration: none;
-  color: #333;
-  display: block;
-  padding: 8px 10px;
-  border-radius: 6px;
-  transition: all 0.3s;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1b5e20;
 }
 
-.sidebar ul li.active a,
-.sidebar ul li a:hover {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-}
+/* SEARCH BAR */
+.search-container { width: 520px; }
 
-/* ---------------------- OVERLAY ---------------------- */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
+.search-input {
   width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.3);
-  z-index: 150;
+  padding: 12px 14px;
+  border: 1px solid #cfd6de;
+  border-radius: 0; /* square corners */
+  font-size: 15px;
+  background: #ffffff;
+  box-shadow: inset 6px 6px 12px rgba(0,0,0,0.05), inset -6px -6px 12px rgba(255,255,255,0.9);
+}
+
+.logout-button {
+  padding: 8px 12px;
+  border: 1px solid #cfd6de;
+  background: #fff;
+  color: #1b5e20;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background: #f2f5f2;
 }

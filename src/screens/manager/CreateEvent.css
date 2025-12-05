@@ -79,41 +79,6 @@ body, html {
   color: #2e7d32;
 }
 
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  flex: 1;
-  justify-content: flex-end;
-}
-
-.nav-icons .material-icons {
-  margin-left: 10px;
-  cursor: pointer;
-  color: #555;
-  transition: color 0.3s;
-}
-
-.nav-icons .material-icons:hover {
-  color: #2e7d32;
-}
-
-.nav-buttons button {
-  background-color: #2e7d32;
-  color: #fff;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: 0.3s;
-}
-
-.nav-buttons button:hover {
-  background-color: #1b5e20;
-  transform: translateY(-1px);
-}
-
 /* ==================== Layout ==================== */
 .container {
   display: flex;
@@ -255,6 +220,24 @@ form textarea {
   color: #333;
 }
 
+.right-sidebar h4 {
+  margin-top: 12px;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #1b5e20;
+}
+
+.right-sidebar .tips-list {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.right-sidebar .tips-list li {
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #444;
+}
+
 /* ==================== Footer ==================== */
 footer {
   text-align: center;
@@ -275,3 +258,54 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+/* ------------------- Container Flex for Equal Height ------------------- */
+.container {
+  display: flex;
+  gap: 20px;
+  align-items: stretch; /* makes sidebar stretch to match main content */
+  padding: 20px;
+}
+
+/* Right Sidebar */
+.right-sidebar {
+  flex: 1 1 250px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100%; /* stretch to match main content */
+}
+
+.right-sidebar h3 {
+  color: #2e7d32;
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.right-sidebar h4 {
+  margin-top: 15px;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #1b5e20;
+}
+
+.right-sidebar p {
+  font-size: 15px;
+  margin: 6px 0;
+  color: #333;
+}
+
+.right-sidebar .tips-list {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.right-sidebar .tips-list li {
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #444;
+}
+

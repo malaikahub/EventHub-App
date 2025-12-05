@@ -1,0 +1,43 @@
+.mysaved-events-container {
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+}
+
+.saved-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.saved-event-card {
+  display: flex;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+}
+
+.event-image {
+  width: 200px;
+  height: 150px;
+  object-fit: cover;
+}
+
+.event-info {
+  padding: 10px 15px;
+}
+
+.event-info h3 {
+  margin: 0;
+}
+
+.register-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background-color: #1d4ed8;
+  color: white;
+  border-radius: 5px;
+  text-decoration: none;
+}
